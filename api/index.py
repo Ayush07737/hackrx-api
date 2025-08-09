@@ -34,8 +34,8 @@ except Exception as e:
     logger.error(f"Failed to initialize Pinecone: {str(e)}")
     raise
 
-# Initialize Sentence Transformer for embeddings
-model = SentenceTransformer('all-MiniLM-L6-v2')
+# Initialize Sentence Transformer with a lighter model
+model = SentenceTransformer('paraphrase-MiniLM-L3-v2')  # Smaller model, ~80 MB
 
 # FastAPI app setup
 app = FastAPI(title="HackRx 6.0 API")
@@ -123,9 +123,9 @@ def generate_answer(question: str, chunks: List[str]) -> str:
         response = openai.Completion.create(
             engine="text-davinci-003",
             prompt=prompt,
-            max_tokens=100,  # Reduced to speed up
-            temperature=0.3,  # Lowered for consistency
-            timeout=3  # Reduced to fit Vercel limit
+            max_tokens=100,
+            temperature=0.3,
+            timeout=3
         )
         return response.choices[0].text.strip()
     except Exception as e:
@@ -164,7 +164,7 @@ async def process_query(request: RequestModel, token: str = Depends(verify_token
             answers.append(answer)
             
             # Check time constraint
-            if time.time() - start_time > 7:  # Reduced to 7s to fit Vercel 10s limit
+            if time.time() - start_time > 7:
                 raise HTTPException(status_code=408, detail="Processing timed out")
         
         return ResponseModel(answers=answers)
